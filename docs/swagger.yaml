@@ -1,0 +1,234 @@
+definitions:
+  entities.CharacterEntry:
+    properties:
+      actorLink:
+        type: string
+      actorName:
+        type: string
+      characterID:
+        type: integer
+      characterImageFull:
+        type: string
+      characterImageThumb:
+        type: string
+      characterLink:
+        type: string
+      characterName:
+        type: string
+      houseName:
+        items:
+          type: string
+        type: array
+      killed:
+        items:
+          type: string
+        type: array
+      killedBy:
+        items:
+          type: string
+        type: array
+      marriedEngaged:
+        items:
+          type: string
+        type: array
+      nickname:
+        type: string
+      parents:
+        items:
+          type: string
+        type: array
+      royal:
+        type: boolean
+      siblings:
+        items:
+          type: string
+        type: array
+    type: object
+info:
+  contact: {}
+paths:
+  /characters:
+    get:
+      consumes:
+      - application/json
+      description: Get all characters with pagination
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/entities.CharacterEntry'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all characters
+      tags:
+      - characters
+    post:
+      consumes:
+      - application/json
+      description: Create a new character and add relationships
+      parameters:
+      - description: Character Entry
+        in: body
+        name: character
+        required: true
+        schema:
+          $ref: '#/definitions/entities.CharacterEntry'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.CharacterEntry'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new character
+      tags:
+      - characters
+  /characters/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a character by name
+      parameters:
+      - description: Character name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a character by name
+      tags:
+      - characters
+    get:
+      consumes:
+      - application/json
+      description: Get a character by name
+      parameters:
+      - description: Character name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.CharacterEntry'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a character by name
+      tags:
+      - characters
+  /elastic/search:
+    get:
+      consumes:
+      - application/json
+      description: Search characters by term in elastic
+      parameters:
+      - description: Search term
+        in: query
+        name: term
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/entities.CharacterEntry'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search characters in elastic
+      tags:
+      - search
+  /search:
+    get:
+      consumes:
+      - application/json
+      description: Search characters by term
+      parameters:
+      - description: Search term
+        in: query
+        name: term
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/entities.CharacterEntry'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Search characters
+      tags:
+      - search
+swagger: "2.0"

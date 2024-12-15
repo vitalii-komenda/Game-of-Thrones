@@ -1,0 +1,11 @@
+FROM alpine
+
+WORKDIR /app
+
+RUN wget https://github.com/pressly/goose/releases/download/v3.19.1/goose_linux_x86_64 -O /usr/local/bin/goose
+RUN chmod +x /usr/local/bin/goose
+
+COPY migrate-db.sh /app/migrate-db.sh
+RUN chmod +x /app/migrate-db.sh
+
+ENTRYPOINT [ "sh", "/app/migrate-db.sh" ]

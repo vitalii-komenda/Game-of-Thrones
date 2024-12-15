@@ -1,0 +1,92 @@
+version: "3.9"
+
+services:
+  got-app:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+    environment:
+      - DEPLOY_TARGET=local
+      - DB_HOST=db
+      - DB_PORT=5433
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DB_NAME=got
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - got
+      - default
+  db:
+    container_name: gotdb
+    healthcheck:
+      test: "pg_isready -U $$POSTGRES_USER -d got"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    build:
+      context: ./db/
+      dockerfile: Dockerfile.db
+    restart: always
+    environment:
+      DB_NAME: got
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGPORT: 5433
+    ports:
+      - "5433:5433"
+    volumes:
+      - got-dbdata:/var/lib/postgresql/data
+  migrate:
+    build:
+      context: ./db/
+      dockerfile: Dockerfile.migrations
+    volumes:
+      - "./migrations:/app/migrations"
+    restart: "no"
+    # entrypoint: "goose -dir /app/migrations down"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOOSE_DBSTRING: "${GOOSE_DBSTRING:-postgres://postgres:postgres@gotdb:5433/got?sslmode=disable}"
+      GOOSE_DRIVER: "postgres"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+    networks:
+      - got
+      - default
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.1
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./jdbc/postgresql-42.2.18.jar:/usr/share/logstash/postgresql-42.2.18.jar
+    environment:
+      - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=./jdbc/postgresql-42.2.18.jar
+    depends_on:
+      - db
+      - elasticsearch
+    networks:
+      - got
+      - default
+networks:
+  got:
+    name: got
+
+volumes:
+  got-dbdata:
